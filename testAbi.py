@@ -32,8 +32,6 @@ def clone_eos_code():
 	for cmd in cmd_list:
 		if not cmd:
 			continue
-		print 'cmd-->', cmd
-		continue
         	P =subprocess.Popen(cmd, shell=True)
         	P.communicate()
 
