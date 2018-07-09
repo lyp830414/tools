@@ -3,7 +3,7 @@
 import os,sys,subprocess, time
 
 ####################CONFIG PATH##############################
-download_path  = '/home/bottos/testAbi/'        #############
+download_path  = '/home/bottos/EOS/'            #############
 contracts_path = '/home/bottos/contracts/'      #############
 #############################################################
 
@@ -22,6 +22,9 @@ def clone_eos_code():
  	global git_cmd, update_cmd, set_permission, run_eos_build, git_cmd_bottos, copy_cmd_bottos
 	
 	if len(sys.argv)>1 and sys.argv[1] == 'deploy':
+    		if os.path.exists(download_path):
+			os.system('rm -rf '+download_path)
+			#os.system('ls -l ' + download_path)
 		pass
 	else:
 		git_cmd, update_cmd, set_permission, run_eos_build, git_cmd_bottos = ' '*5
@@ -32,7 +35,8 @@ def clone_eos_code():
 	for cmd in cmd_list:
 		if not cmd:
 			continue
-        	P =subprocess.Popen(cmd, shell=True)
+        	print 'NOW CMD:', cmd
+		P =subprocess.Popen(cmd, shell=True)
         	P.communicate()
 
 
@@ -82,9 +86,8 @@ def gen_bto_abi(abi_path, hpp_path):
         P.communicate()
 
 if __name__ == '__main__':
-    #print 'here'
-    
+    	#print 'here'
     	clone_eos_code()
-    	#loop_dirs()
+    	loop_dirs()
     	#print 'done'
 
