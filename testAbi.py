@@ -25,7 +25,7 @@ def clone_eos_code():
  	global git_cmd, update_cmd, set_permission, run_eos_build, git_cmd_bottos, copy_cmd_bottos
 	
 	if len(sys.argv)>1 and sys.argv[1] == 'deploy':
-    		if os.path.exists(download_path):
+    		#if os.path.exists(download_path):
 			#os.system('rm -rf '+download_path)
 			#os.system('ls -l ' + download_path)
 		pass
