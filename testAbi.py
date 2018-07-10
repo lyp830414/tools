@@ -3,7 +3,7 @@
 import os,sys,subprocess, time
 
 ####################CONFIG PATH##############################
-download_path  = '/home/bottos/EOS/'            #############
+download_path  = '/home/bottos/eos/'            #############
 contracts_path = '/home/bottos/contracts/'      #############
 external_abi_path = '/home/bottos/contracts/lib' ############
 #############################################################
@@ -26,7 +26,7 @@ def clone_eos_code():
 	
 	if len(sys.argv)>1 and sys.argv[1] == 'deploy':
     		if os.path.exists(download_path):
-			os.system('rm -rf '+download_path)
+			#os.system('rm -rf '+download_path)
 			#os.system('ls -l ' + download_path)
 		pass
 	else:
