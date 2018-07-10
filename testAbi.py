@@ -13,10 +13,10 @@ eosio_abigen_path = download_path + 'build/programs/eosio-abigen/eosio-abigen'
 eosio_bin_path    = download_path + 'bin'
 
 #cmd tables
-git_cmd = 'git clone https://github.com/EOSIO/eos.git ' + download_path
-update_cmd = 'cd ' + download_path + '; git submodule update --init --recursive'
-set_permission = 'chmod +x ' + eos_script
-run_eos_build = 'cd ' + download_path + '; ./eosio_build.sh'
+git_cmd = ''        #'git clone https://github.com/EOSIO/eos.git ' + download_path
+update_cmd = ''     #'cd ' + download_path + '; git submodule update --init --recursive'
+set_permission = '' #'chmod +x ' + eos_script
+run_eos_build = ''  #= 'cd ' + download_path + '; ./eosio_build.sh'
 git_cmd_bottos = 'rm -rf contracts; git clone https://github.com/bottos-project/contracts.git; sudo apt-get install -y gcc-4.8-multilib g++-4.8-multilib'
 copy_cmd_bottos = 'mkdir ' + eosio_bin_path + ' 2>/dev/null; cp ' + eosio_abigen_path + ' ' +  eosio_bin_path + '; cp -rf ' + contracts_path +'* ' + download_path + 'tools'
 
@@ -105,12 +105,13 @@ def loop_dirs():
 								if 'EXTERNAL_ABI_STRUCT' in line:
 									external_struct_name = line[line.index('[')+1:line.index(']')]
 									external_struct_lines = find_external_abi_struct(external_struct_name)
-									#print '!!!!!!!!!!!!!!!!!!!!!!!!!!!external_struct_lines: ', external_struct_lines
 									if len(external_struct_lines) > 0:
 										for external_line in external_struct_lines:
 											if 'char ' in external_line and '[' in external_line and ']' in external_line: #bytes
-												external_line.replace('char ', 'bytes ')
-												external_line[line.index('['):] = ';'
+												external_line = external_line.replace('char ', 'bytes ')
+												external_line = external_line[0:external_line.index('[')]
+												external_line += ';\n'
+												
 											hppf.write(external_line)
 									continue
 								
