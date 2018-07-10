@@ -9,7 +9,7 @@ external_abi_path = '/home/bottos/contracts/lib' ############
 #############################################################
 
 eos_script = download_path + "eosio_build.sh"
-eosio_abigen_path = download_path + 'build/programs/eosio-abigen/eosio-abigen'
+eosio_abigen_path = download_path + 'build/programs/abi_gen/abi_gen' #'programs/eosio-abigen' #'build/programs/eosio-abigen/eosio-abigen'
 eosio_bin_path    = download_path + 'bin'
 
 #cmd tables
@@ -93,7 +93,7 @@ def loop_dirs():
 								os.remove(hpp_file)	
 							abi_begin = True
 							with open(hpp_file, 'a') as hppf:
-								header_info = '#include ' + '\"' + download_path + 'contracts/eosiolib/types.h' + '\"'
+								header_info = '#include ' + '\"' + download_path + 'contracts/eosiolib/types.h' + '\"\n'
 								hppf.write(header_info)
 							continue
 						
@@ -106,6 +106,7 @@ def loop_dirs():
 									external_struct_name = line[line.index('[')+1:line.index(']')]
 									external_struct_lines = find_external_abi_struct(external_struct_name)
 									if len(external_struct_lines) > 0:
+										print 'external_struct_lines: ', external_struct_lines
 										for external_line in external_struct_lines:
 											if 'char ' in external_line and '[' in external_line and ']' in external_line: #bytes
 												external_line = external_line.replace('char ', 'bytes ')
@@ -131,15 +132,17 @@ def loop_dirs():
 
 
 def gen_bto_abi(abi_path, hpp_path):
-	genabi_cmd =  download_path + 'tools/eosiocpp.in -g ' + abi_path + ' ' + hpp_path + '; sed -i "" "s/bytes/string/g"' + ' ' + abi_path + '; cat ' + abi_path
-
+	
+	genabi_cmd = 'sudo chmod +x ' + eosio_abigen_path  +';sudo chmod +x ' + download_path + 'tools/eoscpp.in; sudo ' + download_path + 'tools/eoscpp.in -g ' + abi_path + ' ' + hpp_path + '; sed -i "" "s/bytes/string/g"' + ' ' + abi_path + '; cat ' + abi_path
+	
 	print '\n\ngenabi_cmd:', genabi_cmd, '\n\n'
         P =subprocess.Popen(genabi_cmd, shell=True)
         P.communicate()
 
 if __name__ == '__main__':
     	#print 'here'
-    	clone_eos_code()
+	if len(sys.argv)>1 and sys.argv[1] == 'deploy':
+    		clone_eos_code()
     	loop_dirs()
     	#print 'done'
 
