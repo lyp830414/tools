@@ -3,7 +3,7 @@
 import os,sys,subprocess, time
 
 ####################CONFIG PATH##############################
-download_path  = '/home/bottos/eos/'            #############
+download_path  = '/home/bottos/EOS/'        #############
 contracts_path = '/home/bottos/contracts/'      #############
 external_abi_path = '/home/bottos/contracts/lib' ############
 #############################################################
@@ -83,6 +83,13 @@ def loop_dirs():
 				abi_file = os.path.join(root,filename)[:-4] + 'abi'
 				#print "now open: ", hpp_file
 				
+				contract_name = ' '
+				if len(sys.argv)>1 and 'mng' in sys.argv[1]:
+					contract_name = sys.argv[1]
+				if contract_name != ' ':
+					if not contract_name in cpp_file:
+						continue
+
 				if not os.path.exists(cpp_file):
 					continue
 				
@@ -93,7 +100,7 @@ def loop_dirs():
 								os.remove(hpp_file)	
 							abi_begin = True
 							with open(hpp_file, 'a') as hppf:
-								header_info = '#include ' + '\"' + download_path + 'contracts/eosiolib/types.h' + '\"\n'
+								header_info = '#include ' + '\"' + download_path + 'tools/types.h' + '\"\n'
 								hppf.write(header_info)
 							continue
 						
@@ -133,7 +140,7 @@ def loop_dirs():
 
 def gen_bto_abi(abi_path, hpp_path):
 	
-	genabi_cmd = 'sudo chmod +x ' + eosio_abigen_path  +';sudo chmod +x ' + download_path + 'tools/eoscpp.in; sudo ' + download_path + 'tools/eoscpp.in -g ' + abi_path + ' ' + hpp_path + '; sed -i "" "s/bytes/string/g"' + ' ' + abi_path + '; cat ' + abi_path
+	genabi_cmd = download_path + 'tools/eosiocpp.in -g ' + abi_path + ' ' + hpp_path + '; sed -i "" "s/bytes/string/g"' + ' ' + abi_path #+ '; cat ' + abi_path
 	
 	print '\n\ngenabi_cmd:', genabi_cmd, '\n\n'
         P =subprocess.Popen(genabi_cmd, shell=True)
