@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os,sys,subprocess, time
-import copy
+import copy,shutil
 
 struct_array     = []
 abi_action_array = []
@@ -321,12 +321,12 @@ def gen_wasm(cpp_filename):
 	tmpdir = './tmpdir'
 	builddir = './tmpdir/build'
 	
-	if not os.path.isdir(tmpdir):
-		tmpdir = os.mkdir(tmpdir)
-	
-	if not os.path.isdir(builddir):
-		builddir = os.mkdir(builddir)
-	
+	if os.path.isdir(tmpdir):
+		shutil.rmtree(tmpdir)
+
+	os.mkdir(tmpdir)
+	os.mkdir(builddir)
+
 	libdir = './lib'
 	
 	if not os.path.isdir(libdir):
@@ -353,6 +353,9 @@ def gen_wasm(cpp_filename):
 	wasm_filename = cpp_filename[:-4] + '.wasm'
 	gen_wasm_cmd = './wat2wasm %s -o %s' %(wast_filename, wasm_filename)
 	excute_cmd(gen_wasm_cmd)
+	
+	if os.path.isdir(tmpdir):
+		shutil.rmtree(tmpdir)
 	
 if __name__ == '__main__':
 	if len(sys.argv) > 1:
