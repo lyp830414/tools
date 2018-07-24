@@ -1,10 +1,10 @@
-# tools
-Some tools for my friends and parients
+This tool supply two functions: generate abi file and generate wasm file.
 
-1. Modify the CONFIG PATH variables for your own path.
-	a. download_path: your code download path
-	b. contracts_path: our contracts stored path.
+1. For generating abi file, you need provide the *.hpp file and try as:
+	python gentool.py **.hpp
+   Then, the **.abi file will be generated under current directory.
 
-2. python testAbi.py deploy for initialize
-3. python testAbi.py for your usage.
+2. For generating wasm file, you need provide the *.cpp file and try as:
+	python gentool.py wasm **.cpp
 
+   Then, the **.wast and **.wasm file will be generated under current directory.
