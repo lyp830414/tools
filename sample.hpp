@@ -1,5 +1,3 @@
-#include "/home/bottos/EOS/tools/types.h"
-
 //@abi table assetreginfo:[index_type:string, key_names:abc, key_types:string]
 struct AssetInfo {
     string userName;
