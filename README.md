@@ -12,7 +12,7 @@ This tool supply two functions: generate abi file and generate wasm file.
 
    Then, the **.wast and **.wasm file will be generated under current directory.
 
-3. Restrictions for generate wasm file's cpp
+3. Restrictions for generating wasm file's cpp
         
 	a. Your cpp file must #include "lib/contractcomm.hpp" at first.
 	
