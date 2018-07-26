@@ -4,13 +4,13 @@ This tool supply two functions: generate abi file and generate wasm file.
 	
 	    python gentool.py **.hpp
    
-            Then, the **.abi file will be generated under current directory.
+      Then, the **.abi file will be generated under current directory.
 
 2. For generating wasm file, you need provide the *.cpp file and try as:
 	
 	     python gentool.py wasm **.cpp
 
-             Then, the **.wast and **.wasm file will be generated under current directory.
+      Then, the **.wast and **.wasm file will be generated under current directory.
 
 3. Restrictions for generating wasm file's cpp
         
