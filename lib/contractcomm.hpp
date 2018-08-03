@@ -1,7 +1,7 @@
 
 #include "types.hpp"
-#include "db.h"
 #include "string.hpp"
+#include "db.h"
 #include "msgpack.hpp"
 #include "const.h"
 //#include <emscripten/emscripten.h>
@@ -22,6 +22,12 @@ extern "C" {
     {
         prints(s, strlen(s));
     }
+    
+    static inline void myprintstring(string s)
+    {
+        prints(s.get_data(), s.get_strlen());
+	
+    }
 
     int  callTrx(char *contract , char *method , char *buf , uint32_t buf_len );
     bool isAccountExist(char *mame);
@@ -35,12 +41,16 @@ extern "C" {
 
 #define PRINT_I(VAR_NAME, ELEM_NAME)  do { char elemstr[] = #ELEM_NAME ; myprints(elemstr); printi(VAR_NAME->ELEM_NAME); }while(0);
 #define PRINT_STR(VAR_NAME, ELEM_NAME)  do { char elemstr[] = #ELEM_NAME ; myprints(elemstr); myprints(VAR_NAME->ELEM_NAME); }while(0);
+#define PRINT_STRING(VAR_NAME, ELEM_NAME)  do { char elemstr[] = #ELEM_NAME ; myprints(elemstr); myprintstring(VAR_NAME->ELEM_NAME); }while(0);
 #define PRINT_STRUCT(VAR_NAME, ELEM_NAME) do { print_struct(&VAR_NAME->ELEM_NAME); }while(0);
 
-
+#define PRINT_I_VALUE(value)  do { printi(value); }while(0);
+#define PRINT_STRING_VALUE(string_val) do { myprintstring(string_val); }while(0);
 
 
 #define UNPACK_STR(VAR_NAME, ELEM_NAME, ELEM_LEN) do { if (!unpack_str(ctx, VAR_NAME->ELEM_NAME, ELEM_LEN, &size)) return 0; }while(0);
+#define UNPACK_STRING(VAR_NAME, ELEM_NAME, ELEM_LEN) do { VAR_NAME->ELEM_NAME = string(ELEM_LEN);  if (!unpack_string(ctx, VAR_NAME->ELEM_NAME.get_data(), ELEM_LEN, &size)) return 0; }while(0);
+
 #define UNPACK_U32(VAR_NAME, ELEM_NAME) do { if (!unpack_u32(ctx, &VAR_NAME->ELEM_NAME)) return 0; }while(0); 
 #define UNPACK_U64(VAR_NAME, ELEM_NAME) do { if (!unpack_u64(ctx, &VAR_NAME->ELEM_NAME)) return 0; }while(0);
 #define UNPACK_ARRAY(SIZE_NUM)  do { if (!unpack_array(ctx, &size)) return 0; if (SIZE_NUM != size) return 0; }while(0);
@@ -50,6 +60,7 @@ extern "C" {
 #define PACK_U32(VAR_NAME, ELEM_NAME) do { if (!pack_u32(ctx, VAR_NAME->ELEM_NAME)) return 0; }while(0);
 #define PACK_U64(VAR_NAME, ELEM_NAME) do { if (!pack_u64(ctx, VAR_NAME->ELEM_NAME)) return 0; }while(0);
 #define PACK_STR16(VAR_NAME, ELEM_NAME) do { if (!pack_str16(ctx, VAR_NAME->ELEM_NAME, strlen(VAR_NAME->ELEM_NAME))) return 0; }while(0);
+#define PACK_STRING(VAR_NAME, ELEM_NAME) do { if (!pack_str16(ctx, VAR_NAME->ELEM_NAME.get_data(), VAR_NAME->ELEM_NAME.get_strlen())) return 0; }while(0);
 
 
 #define CHECK_ACCOUNT_VALID(ACCOUNT) do { if (!isAccountExist(info->ACCOUNT)) return false;} while(0);

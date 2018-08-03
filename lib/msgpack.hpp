@@ -524,6 +524,29 @@ static int unpack_str(MsgPackCtx *ctx, char *data, uint32_t buf_size, uint32_t *
   return 1;
 }
 
+static int unpack_string(MsgPackCtx *ctx, char *data, uint32_t buf_size, uint32_t *strsize) {
+  
+  uint32_t str_size = 0;
+  if (!unpack_str_size(ctx, &str_size))
+    return 0;
+
+  if ((str_size + 1) > buf_size) {
+    ctx->error = ERROR_SHORT_BUFFER;
+    return 0;
+  }
+
+  if (!read(ctx, data, str_size)) {
+    ctx->error = ERROR_UNPACK_DATA;
+    return 0;
+  }
+  
+  *strsize = str_size;
+
+  data[str_size] = 0;
+
+  return 1;
+}
+
 static int unpack_bin_size(MsgPackCtx *ctx, uint32_t *size) {
   MPObject obj;
 

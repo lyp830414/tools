@@ -1,34 +1,14 @@
-/**
- *  @file
- *  @copyright defined in eos/LICENSE.txt
- */
 #pragma once
 
 #include <memory.h>
-//#include <../eoslib/print.hpp>
-
-//namespace eosio {
-
-   using ::memset;
-   using ::memcpy;
-
-  /**
-   *  @defgroup memorycppapi Memory C++ API
-   *  @brief Defines common memory functions
-   *  @ingroup memoryapi
-   *
-   *  @{
-   */
-
-   class memory_manager  // NOTE: Should never allocate another instance of memory_manager
+   
+   class memory_keeper
    {
    friend void* malloc(uint32_t size);
    friend void* realloc(void* ptr, uint32_t size);
    friend void free(void* ptr);
    public:
-      memory_manager()
-      // NOTE: it appears that WASM has an issue with initialization lists if the object is globally allocated,
-      //       and seems to just initialize members to 0
+      memory_keeper()
       : _heaps_actual_size(0)
       , _active_heap(0)
       , _active_free_heap(0)
@@ -42,11 +22,9 @@
       {
          memory* const current_memory = _available_heaps + _active_heap;
 
-         // make sure we will not exceed the 1M limit (needs to match wasm_interface.cpp _max_memory)
          auto remaining = 1024 * 1024 - reinterpret_cast<int32_t>(sbrk(0));
          if (remaining <= 0)
          {
-            // ensure that any remaining unallocated memory gets cleaned up
             current_memory->cleanup_remaining();
             ++_active_heap;
             _heaps_actual_size = _active_heap;
@@ -55,11 +33,9 @@
 
          const uint32_t new_heap_size = remaining > _new_heap_size ? _new_heap_size : remaining;
          char* new_memory_start = static_cast<char*>(sbrk(new_heap_size));
-         // if we can expand the current memory, keep working with it
          if (current_memory->expand_memory(new_memory_start, new_heap_size))
             return current_memory;
 
-         // ensure that any remaining unallocated memory gets cleaned up
          current_memory->cleanup_remaining();
 
          ++_active_heap;
@@ -74,21 +50,17 @@
          if (size == 0)
             return nullptr;
 
-         // see Note on ctor
          if (_heaps_actual_size == 0)
             _heaps_actual_size = _heaps_size;
 
-         adjust_to_mem_block(size);
+         modify_mem_block(size);
 
-         // first pass of loop never has to initialize the slot in _available_heap
          uint32_t needs_init = 0;
          char* buffer = nullptr;
          memory* current = nullptr;
-         // need to make sure
          if (_active_heap < _heaps_actual_size)
          {
             memory* const start_heap = &_available_heaps[_active_heap];
-            // only heap 0 won't be initialized already
             if(_active_heap == 0 && !start_heap->is_init())
             {
                start_heap->init(_initial_heap, _initial_heap_size);
@@ -100,7 +72,6 @@
          while (current != nullptr)
          {
             buffer = current->malloc(size);
-            // done if we have a buffer
             if (buffer != nullptr)
                break;
 
@@ -136,7 +107,7 @@
          }
 
          const uint32_t REMOVE = size;
-         adjust_to_mem_block(size);
+         modify_mem_block(size);
 
          char* realloc_ptr = nullptr;
          uint32_t orig_ptr_size = 0;
@@ -187,7 +158,7 @@
          }
       }
 
-      void adjust_to_mem_block(uint32_t& size)
+      void modify_mem_block(uint32_t& size)
       {
          const uint32_t remainder = (size + _size_marker) & _rem_mem_block_mask;
          if (remainder > 0)
@@ -254,7 +225,6 @@
                buffer_ptr current_buffer(current, _heap + _heap_size);
                if (!current_buffer.is_alloc())
                {
-                  // done if we have enough contiguous memory
                   if (current_buffer.merge_contiguous(size))
                   {
                      current_buffer.mark_alloc();
@@ -265,7 +235,6 @@
                current = current_buffer.next_ptr();
             }
 
-            // failed to find any free memory
             return nullptr;
          }
 
@@ -275,7 +244,6 @@
 
             buffer_ptr orig_buffer(ptr, end_of_buffer);
             *orig_ptr_size = orig_buffer.size();
-            // is the passed in pointer valid
             char* const orig_buffer_end = orig_buffer.end();
             if (orig_buffer_end > end_of_buffer)
             {
@@ -285,21 +253,18 @@
 
             if (ptr > end_of_buffer - size)
             {
-               // cannot resize in place
                return nullptr;
             }
 
             const int32_t diff = size - *orig_ptr_size;
             if (diff < 0)
             {
-               // use a buffer_ptr to allocate the memory to free
                char* const new_ptr = ptr + size + _size_marker;
                buffer_ptr excess_to_free(new_ptr, -diff, _heap + _heap_size);
                excess_to_free.mark_free();
 
                return ptr;
             }
-            // if ptr was the last allocated buffer, we can expand
             else if (orig_buffer_end == &_heap[_offset])
             {
                orig_buffer.size(size);
@@ -311,7 +276,6 @@
                return ptr;
 
             if (!orig_buffer.merge_contiguous_if_available(size))
-               // could not resize in place
                return nullptr;
 
             orig_buffer.mark_alloc();
@@ -329,7 +293,6 @@
             if (_offset == _heap_size)
                return;
 
-            // take the remaining memory and act like it was allocated
             const uint32_t size = _heap_size - _offset - _size_marker;
             buffer_ptr new_buff(&_heap[_offset + _size_marker], size, _heap + _heap_size);
             _offset = _heap_size;
@@ -380,7 +343,6 @@
 
             void size(uint32_t val)
             {
-               // keep the same state (allocated or free) as was set before
                const uint32_t memory_state = *reinterpret_cast<uint32_t*>(_ptr - _size_marker) & _alloc_memory_mask;
                *reinterpret_cast<uint32_t*>(_ptr - _size_marker) = val | memory_state;
                _size = val;
@@ -423,7 +385,6 @@
          private:
             bool merge_contiguous(uint32_t needed_size, bool all_or_nothing)
             {
-               // do not bother if there isn't contiguious space to allocate
                if (all_or_nothing && _heap_end - _ptr < needed_size)
                   return false;
 
@@ -431,7 +392,6 @@
                while (possible_size < needed_size  && (_ptr + possible_size < _heap_end))
                {
                   const uint32_t next_mem_flag_size = *reinterpret_cast<const uint32_t*>(_ptr + possible_size);
-                  // if ALLOCed then done with contiguous free memory
                   if (next_mem_flag_size & _alloc_memory_mask)
                      break;
 
@@ -441,7 +401,6 @@
                if (all_or_nothing && possible_size < needed_size)
                   return false;
 
-               // combine
                const uint32_t new_size = possible_size < needed_size ? possible_size : needed_size;
                size(new_size);
 
@@ -466,12 +425,10 @@
       };
 
       static const uint32_t _size_marker = sizeof(uint32_t);
-      // allocate memory in 8 char blocks
       static const uint32_t _mem_block = 8;
       static const uint32_t _rem_mem_block_mask = _mem_block - 1;
-      static const uint32_t _initial_heap_size = 8192;//32768;
+      static const uint32_t _initial_heap_size = 8192;
       static const uint32_t _new_heap_size = 65536;
-      // if sbrk is not called outside of this file, then this is the max times we can call it
       static const uint32_t _heaps_size = 16;
       char _initial_heap[_initial_heap_size];
       memory _available_heaps[_heaps_size];
@@ -481,54 +438,17 @@
       static const uint32_t _alloc_memory_mask = 1 << 31;
    } memory_heap;
 
-  /**
-   * Allocate a block of memory.
-   * @brief Allocate a block of memory.
-   * @param size  Size of memory block
-   *
-   * Example:
-   * @code
-   * uint64_t* int_buffer = malloc(500 * sizeof(uint64_t));
-   * @endcode
-   */
    inline void* malloc(uint32_t size)
    {
       return memory_heap.malloc(size);
    }
-
-   /**
-    * Allocate a block of memory.
-    * @brief Allocate a block of memory.
-    * @param size  Size of memory block
-    *
-    * Example:
-    * @code
-    * uint64_t* int_buffer = malloc(500 * sizeof(uint64_t));
-    * ...
-    * uint64_t* bigger_int_buffer = realloc(int_buffer, 600 * sizeof(uint64_t));
-    * @endcode
-    */
 
    inline void* realloc(void* ptr, uint32_t size)
    {
       return memory_heap.realloc(ptr, size);
    }
 
-   /**
-    * Free a block of memory.
-    * @brief Free a block of memory.
-    * @param ptr  Pointer to memory block to free.
-    *
-    * Example:
-    * @code
-    * uint64_t* int_buffer = malloc(500 * sizeof(uint64_t));
-    * ...
-    * free(int_buffer);
-    * @endcode
-    */
     inline void free(void* ptr)
     {
        return memory_heap.free(ptr);
     }
-   /// @} /// mathcppapi
-//}
