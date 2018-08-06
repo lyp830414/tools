@@ -174,9 +174,10 @@ class string {
       return string(data + offset, substr_size, copy);
     }
 
-    char operator [] (const size_t index) {
+    string operator [] (const size_t index) {
       assert(index < size, "index out of bound");
-      return *(data + index);
+      string abc(data + index, 2, true);
+      return abc;
     }
 
     string& operator = (const string& obj) {
