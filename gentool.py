@@ -91,7 +91,10 @@ def write_each_struct(f, head_blank, struct_info, is_last_struct):
 				elif not valname:
 					valname = item.strip()
 					if '[' in valname and ']' in valname:
-						valtype = 'bytes'
+						if valtype in ('char', 'string'):
+							valtype = 'string'
+						else:
+							valtype = 'bytes'
 						valname = valname[0:valname.index('[')]
 					break
 
